@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 url = "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_smz"
+host="heidi.retiolum"
+base_key = "weather.stadtklima-stuttgart.schwabenzentrum."
 
 import requests
 from bs4 import BeautifulSoup
@@ -7,6 +9,7 @@ import datetime as dt
 from pytz import timezone
 import json
 
+import graphite
 
 fields = {
     "Stickstoffmonoxid (NO):" : "NO",
@@ -50,7 +53,11 @@ for v in fields.values():
 def starts_with_stand(s):
     return s.string.startswith("(Stand")
 timestring = s.find("b",string=starts_with_stand).string
-data["ts"] = timezone("Europe/Berlin").localize(
-        dt.datetime.strptime(timestring,"(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp()
 
-print(json.dumps(data))
+ts = int(timezone("Europe/Berlin").localize(
+        dt.datetime.strptime(timestring,
+            "(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp())
+d = []
+for k,v in data.items():
+    d.append([base_key+k,v,ts])
+graphite.send_all_data(d,host=host)
