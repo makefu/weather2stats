@@ -3,7 +3,7 @@ import sys
 import requests,json
 import graphite
 openweathermap_apikey = ""
-
+host = "heidi.retiolum"
 def k2c(t):
     """ kelvin to degree celsius """
     return t-273.15
@@ -16,7 +16,9 @@ for l in d['list']:
     ts = l['dt'] - 1800
 
     for k,v in l['main'].items():
-        if "temp" in k: v = k2c(v)
+        if "temp" in k:
+            k = k.replace("temp","temperature")
+            v = k2c(v)
         kvt.append([ sensor+"."+k,v,ts])
 
-graphite.send_all_data(kvt,"heidi.retiolum")
+graphite.send_all_data(kvt,host=host)
