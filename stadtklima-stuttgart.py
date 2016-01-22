@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-url = "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_smz"
+
+urls = [ "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_smz",
+         "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_gsg" ]
 host="heidi.retiolum"
-base_key = "weather.stadtklima-stuttgart.schwabenzentrum."
+top_key = "weather.stadtklima-stuttgart."
 
 import requests
 from bs4 import BeautifulSoup
@@ -33,31 +35,38 @@ fields = {
     "UV-A Strahlung:":"UV-A",
     "UV-B Strahlung:":"UV-B" }
 
+mapping = {
+    "gsg" : "geschwister-scholl gymnasium",
+    "smz" : "schwabenzentrum" }
 
+for url in urls:
+    name = mapping[url.split("_")[-1]]
+    base_key = top_key + name + "."
+    data = {}
+    ret = requests.get(url)
+    s = BeautifulSoup(ret.text,"html.parser")
 
-data = {}
-ret = requests.get(url)
-s = BeautifulSoup(ret.text,"html.parser")
-for row in s.find_all("tr"):
-    try:
-        left = row.find(align="left").string
-        right = row.find(align="right").string
-        if left and left in fields:
-            data[fields[left]] = float(right.strip().split(" ")[0])
+    # TODO: will match for gsg the weather data from smz
+    for row in s.find_all("tr"):
+        try:
+            left = row.find(align="left").string
+            right = row.find(align="right").string
+            if left and left in fields:
+                data[fields[left]] = float(right.strip().split(" ")[0])
 
-    except:pass
+        except:pass
 
-for v in fields.values():
-    if not v in data:
-        print(v + " is missing")
-def starts_with_stand(s):
-    return s.string.startswith("(Stand")
-timestring = s.find("b",string=starts_with_stand).string
+    for v in fields.values():
+        if not v in data:
+            print(v + " is missing")
+    def starts_with_stand(s):
+        return s.string.startswith("(Stand")
+    timestring = s.find("b",string=starts_with_stand).string
 
-ts = int(timezone("Europe/Berlin").localize(
-        dt.datetime.strptime(timestring,
-            "(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp())
-d = []
-for k,v in data.items():
-    d.append([base_key+k,v,ts])
-graphite.send_all_data(d,host=host)
+    ts = int(timezone("Europe/Berlin").localize(
+            dt.datetime.strptime(timestring,
+                "(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp())
+    d = []
+    for k,v in data.items():
+        d.append([base_key+k,v,ts])
+    graphite.send_all_data(d,host=host)
