@@ -13,8 +13,9 @@ mapping = { "UV-Intensität": "global_radiation",
             "Luftdruck": "pressure",
             "Beleuchtungsstärke": "brightness" }
 
-end = int(dt.datetime.now().timestamp() - 3600  )*1000
-sense_params = { "from-date":end, "format":"JSON" }
+to = dt.datetime.now().isoformat()
+sense_params = { "from-date":"", "to-date": to, "format":"JSON" }
+
 data = []
 base_key = "weather.sensebox.shackspace."
 for sense in requests.get(api_end+"/boxes/"+box).json()['sensors']:
