@@ -5,7 +5,7 @@ import sys,json
 import graphite
 
 api_end= "http://opensensemap.org:8000/"
-host="heidi.retiolum"
+host="heidi.shack"
 box= "56a0de932cb6e1e41040a68b" #shackspace
 mapping = { "UV-Intensität": "global_radiation",
             "Temperatur": "temperature",
@@ -14,7 +14,12 @@ mapping = { "UV-Intensität": "global_radiation",
             "Beleuchtungsstärke": "brightness" }
 
 to = dt.datetime.now().isoformat()
-sense_params = { "from-date":"", "to-date": to, "format":"JSON" }
+sense_params = { 
+                 # "from-date": "2016-05-12T21:11:12.621978",
+                 # "to-date": "2016-06-12T21:11:12.621978", 
+                 "to-date": to, 
+                 "from-date": "", 
+                 "format":"JSON" }
 
 data = []
 base_key = "weather.sensebox.shackspace."
