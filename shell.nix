@@ -9,5 +9,7 @@ pkgs.stdenv.mkDerivation rec {
     docopt
     beautifulsoup4
     pytz
+    docopt
+    influxdb
   ];
 }

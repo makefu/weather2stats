@@ -42,10 +42,19 @@ def get_sensemap(boxid):
             val[mapping[name]] = float(kv['value'])
     return val
 
-def main(boxid):
-    ret = get_sensemap(boxid)
-    print(json.dumps(ret))
+def boxmain(boxid):
+    """ Returns a list of sensors
+    boxid may be a single string or a list, return value ist always a list of
+    dicts
+    """
+    if type(boxid) == str:
+        return [get_sensemap(boxid)]
+    elif type(boxid) == list:
+        return [ get_sensemap(b) for b in boxid ]
+
+def main():
+    print(json.dumps(boxmain(box)))
 
 if __name__ == "__main__":
-    main(box)
+    main()
     # graphite.send_all_data(data,host=host)

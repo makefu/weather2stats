@@ -10,13 +10,15 @@ def k2c(t):
     return float(t)-273.15
 
 
-def get_openweathermap():
+def get_openweathermap(ids):
     kvt = []
-    d = requests.get('http://api.openweathermap.org/data/2.5/group?id=2825297,6930414,2867993,2927043&appid={}'.format(openweathermap_apikey)).json()
+    d = requests.get('http://api.openweathermap.org/data/2.5/group?id={}&appid={}'.format(
+        ",".join(map(str,ids)), openweathermap_apikey)).json()
     for l in d['list']:
         val = {
             "name": l['name'],
-            "ts": l['dt'] - 1800
+            "ts": l['dt'] - 1800,
+            "_id": l['id']
         }
 
         for k,v in l['main'].items():
@@ -31,7 +33,7 @@ def get_openweathermap():
     return kvt
 
 def main():
-    kvt = get_openweathermap()
+    kvt = get_openweathermap([2825297,6930414,2867993,2927043])
     print(json.dumps(kvt))
     # graphite.send_all_data(kvt,host="heidi.shack")
 

@@ -2,7 +2,8 @@
 
 urls = [ "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_smz",
          "http://www.stadtklima-stuttgart.de/index.php?luft_messdaten_station_gsg" ]
-host="heidi.retiolum"
+urls = [ "http://localhost:8000/messdate_gsg",
+         "http://localhost:8000/messdaten_smz" ]
 top_key = "weather.stadtklima-stuttgart."
 
 import requests
@@ -10,8 +11,7 @@ from bs4 import BeautifulSoup
 import datetime as dt
 from pytz import timezone
 import json
-
-import graphite
+import logging as log
 
 fields = {
     "Stickstoffmonoxid (NO):" : "NO",
@@ -24,27 +24,33 @@ fields = {
     "Empfundene Temperatur in der Sonne:": "perceived_temp_sun",
     "Empfundene Temperatur im Schatten:": "perceived_temp_shadow",
     "Empfundene Temperatur mit Windchill-Effekt:*": "perceived_temp_chill",
-    "Windgeschwindigkeit:":"wind",
-    #"Windrichtung:",
+    "Windgeschwindigkeit:":"wind_speed",
+    "Windrichtung:":"wind_direction",
     "Relative Luftfeuchte:":"humidity",
     "Absoluter Luftdruck: (in 250 m Messhöhe üNN)":"pressure_abs",
     "Relativer Luftdruck: (bisher ohne interaktiver Auswertung)":"pressure",
     "Niederschlag:" :"rain",
-    "Globalstrahlung:":"global_radiation",
+    "Globalstrahlung:":"uv_intensity",
     "Strahlungsbilanz:":"radiation_balance",
     "UV-A Strahlung:":"UV-A",
-    "UV-B Strahlung:":"UV-B" }
+    "UV-Index:":"uv_index",
+    "UV-B Strahlung:":"UV-B"
+    }
 
 mapping = {
     "gsg" : "geschwister-scholl gymnasium",
     "smz" : "schwabenzentrum" }
 
-for url in urls:
+
+def get_data(url):
+    log.warn("Fetching " + url)
     name = mapping[url.split("_")[-1]]
+    data = {
+        "name": name
+    }
     base_key = top_key + name + "."
-    data = {}
-    ret = requests.get(url)
-    s = BeautifulSoup(ret.text,"html.parser")
+    ret = requests.get(url).text
+    s = BeautifulSoup(ret,"html.parser")
 
     # TODO: will match for gsg the weather data from smz
     for row in s.find_all("tr"):
@@ -53,12 +59,14 @@ for url in urls:
             right = row.find(align="right").string
             if left and left in fields:
                 data[fields[left]] = float(right.strip().split(" ")[0])
+            else:
+                log.warn(left + " is not mapped")
 
         except:pass
 
     for v in fields.values():
         if not v in data:
-            print(v + " is missing")
+            log.warn(v + " is missing")
     def starts_with_stand(s):
         return s.string.startswith("(Stand")
     timestring = s.find("b",string=starts_with_stand).string
@@ -66,7 +74,11 @@ for url in urls:
     ts = int(timezone("Europe/Berlin").localize(
             dt.datetime.strptime(timestring,
                 "(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp())
-    d = []
-    for k,v in data.items():
-        d.append([base_key+k,v,ts])
-    graphite.send_all_data(d,host=host)
+    return data
+
+def main():
+    print(json.dumps([get_data(url) for url in urls]))
+    #graphite.send_all_data(d,host=host)
+
+if __name__ == "__main__":
+    main()
