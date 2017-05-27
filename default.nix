@@ -1,9 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
-
-pkgs.stdenv.mkDerivation rec {
-  name = "cacpanel-env";
-  version = "1";
-  buildInputs = with pkgs.python3Packages; [
+with pkgs.python3Packages;
+let
+  inp = [
     python
     requests2
     docopt
@@ -12,4 +10,8 @@ pkgs.stdenv.mkDerivation rec {
     docopt
     influxdb
   ];
+in buildPythonPackage {
+  name = "weather2stats";
+  src = ./.;
+  buildInputs = inp;
 }
