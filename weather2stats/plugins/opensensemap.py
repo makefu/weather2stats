@@ -2,10 +2,9 @@
 import datetime as dt
 import requests
 import sys,json
-import graphite
 
 api_end= "https://api.opensensemap.org/"
-box= "56a0de932cb6e1e41040a68b" #shackspace
+ids = ["56a0de932cb6e1e41040a68b"] #shackspace
 mapping = { "UV-Intensität": "uv_intensity",
             "Temperatur": "temperature",
             "rel. Luftfeuchte": "humidity",
@@ -23,15 +22,15 @@ sense_params = {
 
 data = []
 
-
-def get_sensemap(boxid):
+def get_data_single(boxid):
     info = requests.get(api_end+"/boxes/"+boxid).json()
     val = {
         "_id": boxid,
-        "name": info['name'],
+        "_name": info['name'],
+        "_source": "opensensemap",
         # TODO: createdAt may be different for different sensors, we take the
         # latest val
-        "ts": int(dt.datetime.strptime(info['updatedAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").timestamp())
+        "_ts": int(dt.datetime.strptime(info['updatedAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").timestamp())
     }
     # TODO: original code used /boxes/boxid/data/sensorid to fetch all previous points
     # ts = int(dt.datetime.strptime(kv['createdAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").timestamp())
@@ -42,18 +41,15 @@ def get_sensemap(boxid):
             val[mapping[name]] = float(kv['value'])
     return val
 
-def boxmain(boxid):
+def get_data(ids):
     """ Returns a list of sensors
     boxid may be a single string or a list, return value ist always a list of
     dicts
     """
-    if type(boxid) == str:
-        return [get_sensemap(boxid)]
-    elif type(boxid) == list:
-        return [ get_sensemap(b) for b in boxid ]
+    return [ get_data_single(b) for b in ids ]
 
 def main():
-    print(json.dumps(boxmain(box)))
+    print(json.dumps(boxmain(ids)))
 
 if __name__ == "__main__":
     main()
