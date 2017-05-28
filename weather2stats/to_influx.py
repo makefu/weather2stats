@@ -112,7 +112,7 @@ def main():
         begin = time.clock()
         send_data(client,cfg)
         end = (time.clock() - begin)
-        delta = 30 - end
+        delta = timeout - end
         log.info("Sending data took {} seconds".format(end,delta))
 
         if not do_loop:
