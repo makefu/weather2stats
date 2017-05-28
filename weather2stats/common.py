@@ -29,3 +29,7 @@ def load_plugins():
                      package="weather2stats.plugins"))
 
     return modules
+
+def load_config(f):
+    with open(f) as fil:
+        return json.dump(fil)

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+    get_data requires the sensor id from api.opensensemap.org and no extra config
+"""
 import datetime as dt
 import requests
 import sys,json
@@ -30,7 +33,7 @@ def get_data_single(boxid):
         "_source": "opensensemap",
         # TODO: createdAt may be different for different sensors, we take the
         # latest val
-        "_ts": int(dt.datetime.strptime(info['updatedAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").timestamp())
+        "_ts": dt.datetime.strptime(info['updatedAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").isoformat()
     }
     # TODO: original code used /boxes/boxid/data/sensorid to fetch all previous points
     # ts = int(dt.datetime.strptime(kv['createdAt']+"+0000","%Y-%m-%dT%H:%M:%S.%fZ%z").timestamp())
@@ -41,7 +44,7 @@ def get_data_single(boxid):
             val[mapping[name]] = float(kv['value'])
     return val
 
-def get_data(ids):
+def get_data(ids,cfg=None):
     """ Returns a list of sensors
     boxid may be a single string or a list, return value ist always a list of
     dicts
@@ -49,8 +52,23 @@ def get_data(ids):
     return [ get_data_single(b) for b in ids ]
 
 def main():
-    print(json.dumps(boxmain(ids)))
+    print(json.dumps(get_data(ids)))
+
+def get_mock_data():
+    return [
+            {
+                "_id": "56a0de932cb6e1e41040a68b",
+                "_ts": "2017-05-27T08:40:58.326000+00:00",
+                "uv_intensity": 285,
+                "_name": "shackspace",
+                "_source": "opensensemap",
+                "temperature": 32.75,
+                "pressure": 993.94,
+                "brightness": 8712,
+                "humidity": 23.49
+                }
+            ]
+
 
 if __name__ == "__main__":
     main()
-    # graphite.send_all_data(data,host=host)

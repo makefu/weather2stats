@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+    takes the list of parameters after index.php for stadtklima stuttgart
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import datetime as dt
@@ -47,7 +51,7 @@ mapping = {
     }
 
 
-def get_data(ids):
+def get_data(ids,cfg=None):
     return [get_data_single(  ident) for ident in ids]
 
 def get_data_single(ident):
@@ -88,10 +92,63 @@ def get_data_single(ident):
     if not timestring:
         raise LookupError("Unable to find timestamp in website")
 
-    data["_ts"] = int(timezone("Europe/Berlin").localize(
+    data["_ts"] = timezone("Europe/Berlin").localize(
             dt.datetime.strptime(timestring,
-                "(Stand: %d.%m.%Y, %H:%M Uhr)")).timestamp())
+                "(Stand: %d.%m.%Y, %H:%M Uhr)")).isoformat()
     return data
+
+def get_mock_data():
+    """ Returns mocked data """
+    return [
+            {
+                "humidity": 29,
+                "temperature": 31,
+                "NO2": 28.9,
+                "pressure": 1016.6,
+                "radiation_balance": 70.4,
+                "O3+NO2": 70.5,
+                "_ts": "2017-05-28T19:00:00+02:00",
+                "_name": "schwabenzentrum",
+                "perceived_temp_chill": 33.6,
+                "NO": 1.1,
+                "O3": 41.6,
+                "perceived_temp_sun": 30.4,
+                "pressure_abs": 985.3,
+                "_source": "stadtklima-stuttgart",
+                "UV-B": 0.34,
+                "_id": "luft_messdaten_station_smz",
+                "rain": 0,
+                "UV-A": 15.42,
+                "uv_intensity": 242.1,
+                "perceived_temp_shadow": 26.3,
+                "wind_speed": 1.4,
+                "wind_direction": 21.7
+                },
+            {
+                "_id": "luft_messdaten_station_gsg",
+                "humidity": 23.4,
+                "wind_speed": 1.3,
+                "_name": "geschwister-scholl gymnasium",
+                "_source": "stadtklima-stuttgart",
+                "temperature": 32.7,
+                "wind_direction": 30.9,
+                "_ts": "2017-05-28T19:00:00+02:00"
+                },
+            {
+                "_id": "luft_messdaten_station_bd",
+                "pressure_abs": 989,
+                "humidity": 29.7,
+                "uv_intensity": 445.6,
+                "wind_speed": 2.5,
+                "_name": "branddirektion",
+                "pressure": 1016.5,
+                "_source": "stadtklima-stuttgart",
+                "temperature": 31.1,
+                "wind_direction": 15.1,
+                "_ts": "2017-05-28T19:00:00+02:00"
+                }
+            ]
+
 
 def main():
     print(json.dumps(get_data(ids)))
