@@ -5,7 +5,7 @@
 Plugins implement the following api:
 
   * variable `ids` - list to the standard identifiers used for stuttgart
-  * function `get_data` - takes the list of ids and returns a list of entries
+  * function `get_data` - takes the list of ids and returns a list of entries and cfg dict
 
 ## `get_data()`
 
