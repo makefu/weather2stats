@@ -13,6 +13,10 @@ import json
 import time
 from influxdb import InfluxDBClient
 
+from docopt import docopt
+from functools import partial
+from threading import Timer
+
 log = logging.getLogger("to-influx")
 
 def d2influx(data):
@@ -72,19 +76,26 @@ def run_plugs(cfg):
         name = plug.__name__
         log.info("Running "+name)
         try:
-            # all_data.extend(plug.get_data(plug.ids,cfg))
-            all_data.extend(plug.get_mock_data())
+            all_data.extend(plug.get_data(plug.ids,cfg))
+            # all_data.extend(plug.get_mock_data())
         except Exception as e:
             log.error("Unable to complete {}, reason: {}".format(name,e))
     return all_data
 
+def send_data(client,cfg):
+    log.info("Beginning to retrieve data" )
+    payload = d2influx(run_plugs(cfg))
+    log.debug(payload)
+    log.info("Writing {} points to influx".format(len(payload)))
+    client.write_points(payload)
+
 def main():
-    from docopt import docopt
+
     args = docopt(__doc__)
     set_lol(args['--lol'])
     db = args['--db']
     do_loop = args['loop']
-    timeout = float(args['TIMEOUT'] or 30)
+    timeout = float(args['TIMEOUT'] or 60)
     host,port = args['--server'].split(":")
     if args['--config']:
         cfg = load_config(args['--config'])
@@ -97,17 +108,21 @@ def main():
         log.warn("Creating database "+db)
         client.create_database(db)
 
-    log.info("Beginning to send data" )
     while True:
-        payload = d2influx(run_plugs(cfg))
-        log.debug("Writing {} points".format(payload))
-        log.debug(payload)
-        client.write_points(payload)
+        begin = time.clock()
+        send_data(client,cfg)
+        end = (time.clock() - begin)
+        delta = 30 - end
+        log.info("Sending data took {} seconds".format(end,delta))
+
         if not do_loop:
-            log.info("single send requested, stopping")
+            log.debug("Not looping")
             break
-        log.info("sleeping for {} seconds".format(timeout))
-        time.sleep(timeout)
+        if delta > 0:
+            log.info("Sleeping for {} more secs".format(delta))
+            time.sleep(delta)
+        else:
+            log.warning("We are already {} seconds late, execution took {} seconds!starting right now".format(-delta,end))
 
 
 if __name__ == "__main__":

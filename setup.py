@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 setup(
     name='weather2stats',
     packages=find_packages(),
-    version='0.2',
+    version='0.3',
     description='Convert stats websites to influx data',
     author='Felix Richter',
     license='WTFPL',
