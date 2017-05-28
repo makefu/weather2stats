@@ -79,8 +79,8 @@ def main():
         name = plug.__name__
         log.info("Running "+name)
         try:
-            # all_data.extend(plug.get_data(plug.ids,cfg))
-            all_data.extend(plug.get_mock_data())
+            all_data.extend(plug.get_data(plug.ids,cfg))
+            # all_data.extend(plug.get_mock_data())
         except Exception as e:
             log.error("Unable to complete {}, reason: {}".format(name,e))
     print(json.dumps(d2influx(all_data)))

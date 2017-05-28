@@ -56,7 +56,7 @@ def get_data(ids,cfg=None):
 
 def get_data_single(ident):
     url = base_url + ident
-    log.warn("Fetching " + url)
+    log.info("Fetching " + url)
     name = mapping[ident.split("_")[-1]]
     data = {
         "_name": name,
@@ -83,7 +83,7 @@ def get_data_single(ident):
 
     for v in fields.values():
         if not v in data:
-            log.warn(v + " is missing")
+            log.debug(v + " is missing")
 
     def starts_with_stand(s):
         return s.string.startswith("(Stand")

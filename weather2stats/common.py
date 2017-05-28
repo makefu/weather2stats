@@ -30,6 +30,7 @@ def load_plugins():
 
     return modules
 
+import json
 def load_config(f):
     with open(f) as fil:
-        return json.dump(fil)
+        return json.load(fil)
